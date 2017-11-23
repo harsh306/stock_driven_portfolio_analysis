@@ -57,7 +57,6 @@ lines(BAC.filter1$Date,fitted(fit_mlr),lwd = 3,col="red")
 #Splines SLR
 fit_spline <- smooth.spline(BAC.filter1$BAC.Adjusted , BAC.filter1$BAC.predict)
 summary(fit_spline)
-fit_spline
 plot(BAC.filter1$Date, BAC.filter1$BAC.predict,col="grey",xlab="",ylab="y_norm")
 lines(BAC.filter1$Date,fitted(fit_spline),col="red",lwd=2)
 
@@ -68,3 +67,15 @@ fit_gam <- gam(BAC.filter1$BAC.predict ~. , data = BAC.filter1)
 summary.gam(fit_gam)
 par(mfrow=c(1,12))
 #plot(fit_gam,se = TRUE, pages= 12,all.terms=TRUE,scheme=1)
+
+#PCA
+dm_pca <- prcomp(BAC.filter1[2:12])
+dm_pca$sdev
+dm_pca$center
+par(mfrow=c(1,1))
+plot(dm_pca$x[, 1:2], col= 1:2,xlab = "Z1", ylab = "Z2",  pch=20)
+
+fit_pcalm <- lm(BAC.filter1$BAC.predict~dm_pca$x[, 1:2], data = as.data.frame(dm_pca$x))
+summary.lm(fit_pcalm)
+plot(BAC.filter1$Date,BAC.filter1$BAC.predict,las=1,pch=20,col = "grey")
+lines(BAC.filter1$Date,fitted(fit_pcalm),lwd = 3,col="red")
