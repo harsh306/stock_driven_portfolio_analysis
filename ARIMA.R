@@ -25,7 +25,7 @@ acf.stock = acf(stock[c(1:breakpoint),],main= "ACF PLOT",lag.max = 100,las=1)
 pacf.stock = pacf(stock[c(1:breakpoint),], main='PACF Plot', lag.max=100,las=1)
 
 #Intitializing an xts  object for actual log returns 
-Actual_series = xts(0,as.Date("2016-02-01","%Y-%m-%d"))
+Actual_series = xts(0,as.Date("2016-01-01","%Y-%m-%d"))
 
 # Initialzing a dataframe for the forecasted return series
 forecasted_series = data.frame(Forecasted = numeric())
@@ -36,7 +36,7 @@ for (b in breakpoint:(nrow(stock)-1)) {
   stock_test = stock[(b+1):nrow(stock), ]
   
   # Summary of the ARIMA model using the determined (p,d,q) parameters
-  fit = arima(stock_train, order = c(2, 3, 2),include.mean=FALSE)
+  fit = arima(stock_train,order = c(2,3,2),include.mean=FALSE)
   summary(fit)
   
   #ACF Residual Plots
