@@ -35,8 +35,8 @@ summary(l)
 
 pred = predict(l,test_data)
 accuracy(pred,test_data$ANIP.Adjusted)
-plot(test_data$Date,test_data$ANIP.Predict,las=1,type="l",pch=20)
-lines(test_data$Date,pred,col="red")
+plot(test_data$Date,test_data$ANIP.Predict,las=1,type="l",pch=22,xlab="DATE",ylab="Close Prices",main="Results Using SLR")
+lines(test_data$Date,pred,col="red",pch=22)
 
 #Now Continue to MLR
 lm.fit = lm(ANIP.Predict ~.,data = train_data)

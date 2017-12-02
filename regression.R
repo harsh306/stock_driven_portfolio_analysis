@@ -27,12 +27,12 @@ a <- allData[2:length(allData$ANIP.Adjusted),]$ANIP.Adjusted
 allData['ANIP.Predict'] <- c(a,allData[length(allData$ANIP.Adjusted),7])
 
 #Normalizing the Dataset
-for(i in c(2:length(allData))){
-  allData[i] <- scale(allData[i])
-}
+#for(i in c(2:length(allData))){
+# allData[i] <- scale(allData[i])
+#}
 
 #Performing SLR (Yt = Yt-1 + Error)
-l = lm(ANIP.Predict~ANIP.Adjusted,data = train_data)
+l = lm(ANIP.Adjusted~ANIP.Predict,data = train_data)
 summary(l)
 plot(train_data$Date,train_data$ANIP.Predict,las=1,pch=20)
 
@@ -48,9 +48,10 @@ attach(allData)
 #Continuing to MLR
 train_data = allData[1:361,]
 test_data = allData[-(1:361),]
+train_ANIP = train_data[,-7]
 lm.fit = lm(ANIP.Predict ~.,data = train_data)
 summary(lm.fit)
-lm.fit2 = lm(ANIP.Predict~+pctB+rsi14+ANIP.Adjusted+rsi14+sma20+macd+ema14+ANIP.Open+ANIP.High+ANIP.Low+mavg+dn+up,data = train_data)
+lm.fit2 = lm(ANIP.Predict~+pctB+rsi14+rsi14+sma20+macd+ema14+ANIP.Open+ANIP.High+ANIP.Low+mavg+dn+up,data = train_data)
 summary(lm.fit2)
 pred = predict(lm.fit2,test_data)
 accuracy(pred,test_data$ANIP.Adjusted)
