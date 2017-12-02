@@ -7,8 +7,10 @@ end = as.Date("2017-11-29")
 
 # Getting the Data Frame for ANIP Stocks
 getSymbols("ANIP",src = "yahoo",from=start,to=end)
+
 ANIP.df = data.frame(Date = index(ANIP),coredata(ANIP))
 
+#Getting new features using TTR Library
 sma20 = SMA(ANIP.df[c("ANIP.Adjusted")],n = 20)
 ema14 = EMA(ANIP.df[c("ANIP.Adjusted")],n=14)
 bb20 = BBands(ANIP.df[c("ANIP.Adjusted")],sd = 2.0)
@@ -20,18 +22,26 @@ macd = MACD(ANIP.df[c("ANIP.Adjusted")], nFast=12, nSlow=26, nSig=9, maType=SMA)
 
 allData = data.frame(ANIP.df,sma20,ema14,bb20,rsi14,macd)
 allData = na.omit(allData)
+a = c(allData$ANIP.Adjusted[1],allData$ANIP.Adjusted[1:721])
+allData['ANIP.Predict'] = a
+attach(allData)
 
-
-train_data = allData[1:361,]
-test_data = allData[-(1:361),]
-pca_fit = prcomp(train_new[2:16])
-par(mfrow=c(1,1))
-plot(pca_fit$x[, 1:2], col= 1:2,xlab = "Z1", ylab = "Z2",  pch=20,las=1)
-fit_pcalm = lm(train_new$ANIP.Adjusted~pca_fit$x[,1:2],data = as.data.frame(pca_fit$x))
-summary.lm(fit_pcalm)
-pred_pcr = predict(fit_pcalm,test_new)
-accuracy(pred_pcr,test_new$ANIP.Adjusted)
-plot(test_data$Date,test_data$ANIP.Adjusted,las=1,pch=20,col = "grey",type="l")
-lines(test_data$Date,fitted(fit_pcalm),lwd = 3,col="red")
-
-
+#newData 
+b = data.frame(allData[1,c(-1,-7,-17)])
+b[2:722,] = allData[1:721,c(-1,-7,-17)]
+newData = data.frame(allData[,c(1,7,17)],b)
+train_new = newData[1:361,]
+test_new = newData[-(1:361),]
+k = 10
+i = sample(rep(1:k),length.out = newData)
+cv_tmp = matrix(NA,nrow = k,ncol = length(newData))
+for (j in i:k){
+  test_j = which(i == j)
+  train = xy[-test_j,]
+  test = xy[test_j,]
+  x = train
+  y = test
+  model = lm(ANIP.Adjusted~.,data=x)
+  pred_cv = predict(model,y)
+  acc = accuracy(pred_cv,y$ANIP.Adjusted)
+}

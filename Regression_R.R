@@ -44,15 +44,12 @@ plot(test_data$Date,test_data$ANIP.Predict,las=1,type="l",pch=22,xlab="DATE",yla
 lines(test_data$Date,pred,col="red",pch=22)
 
 #Now Continue to MLR
-lm.fit = lm(ANIP.Adjusted ~ANIP.Open+ANIP.Close+ANIP.High+ANIP.Low+sma20+rsi14+ANIP.Predict,data = train_new)
+lm.fit = lm(ANIP.Adjusted ~ANIP.Open+ANIP.High+ANIP.Low+sma20+rsi14,data = train_new)
 summary(lm.fit)
 pred_mlr = predict(lm.fit,test_new)
-accuracy(pred,test_new$ANIP.Adjusted)
+accuracy(pred_mlr,test_new$ANIP.Adjusted)
 plot(test_data$Date,test_data$ANIP.Adjusted,las=1,type="l",pch=20)
 lines(test_data$Date,pred_mlr,col="red")
-
-test_data$ANIP.Adjusted[358:361]
-pred_mlr[358:361]
 
 #GAM Splines
 fit_spline <- smooth.spline(train_new$ANIP.Predict , train_data$ANIP.Adjusted)
@@ -61,7 +58,7 @@ pred_spline = predict(fit_spline,test_data$ANIP.Adjusted)
 accuracy(pred_spline$y,test_data$ANIP.Adjusted)
 
 plot(test_data$Date,test_data$ANIP.Adjusted,type="l",pch=22)
-lines(test_data$Date,train_data$ANIP.Adjusted,col="red")
+lines(test_new$Date,pred_spline$y,col="red")
 
 
 #Random Forests
@@ -70,3 +67,4 @@ rf = randomForest(ANIP.Adjusted ~ANIP.Open+ANIP.Close+ANIP.High+ANIP.Low+sma20+r
 pred_rf = predict(rf,test_new)
 accuracy(pred_rf,test_new$ANIP.Adjusted)
 plot(rf)
+pred_rf[-2]
