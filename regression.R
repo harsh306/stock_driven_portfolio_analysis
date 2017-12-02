@@ -40,9 +40,6 @@ pred_slr = predict(l,test_data)
 plot(test_data$Date,test_data$ANIP.Predict,las=1,type="l",pch=20)
 lines(test_data$Date,pred_slr,col="red")
 
-pred_slr[361]
-test_data$ANIP.Predict[361]
-
 attach(allData)
 
 #Continuing to MLR
