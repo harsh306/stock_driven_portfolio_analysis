@@ -68,3 +68,10 @@ pred_rf = predict(rf,test_new)
 accuracy(pred_rf,test_new$ANIP.Adjusted)
 plot(rf)
 pred_rf[-2]
+
+# GAM Splines
+library(gam)
+fit_gam <- gam(ANIP.Adjusted ~. , data = train_new)
+summary.gam(fit_gam)
+pred_gam = predict.gam(fit_gam,test_new)
+accuracy(pred_gam,test_new$ANIP.Adjusted)
