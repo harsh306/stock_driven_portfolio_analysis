@@ -108,3 +108,54 @@ pred_gam = predict.gam(fit_gam,test_new)
 accuracy(pred_gam,test_new$BAC.Adjusted)
 par(mfrow=c(1,12))
 pred_gam
+
+# Microsoft
+getSymbols("MSFT",src = "yahoo",from=start,to=end)
+
+MSFT.df = data.frame(Date = index(MSFT),coredata(MSFT))
+
+#Getting new features using TTR Library
+sma20 = SMA(MSFT.df[c("MSFT.Adjusted")],n = 20)
+ema14 = EMA(MSFT.df[c("MSFT.Adjusted")],n=14)
+bb20 = BBands(MSFT.df[c("MSFT.Adjusted")],sd = 2.0)
+dataWithBB = data.frame(MSFT.df,bb20)
+
+#Parameter RSI
+rsi14 = RSI(MSFT.df[c("MSFT.Adjusted")],n=14)
+macd = MACD(MSFT.df[c("MSFT.Adjusted")], nFast=12, nSlow=26, nSig=9, maType=SMA)
+
+allData = data.frame(MSFT.df,sma20,ema14,bb20,rsi14,macd)
+allData = na.omit(allData)
+a = c(allData$MSFT.Adjusted[1],allData$MSFT.Adjusted[1:725])
+allData['MSFT.Predict'] = a
+attach(allData)
+
+#newData 
+b = data.frame(allData[1,c(-1,-7,-17)])
+b[2:726,] = allData[1:725,c(-1,-7,-17)]
+newData = data.frame(allData[,c(1,7,17)],b)
+train_new = newData[1:363,]
+test_new = newData[-(1:363),]
+
+l = lm(train_new$MSFT.Adjusted~train_new$MSFT.Predict)
+summary(l)
+
+pred = predict(l,test_new)
+accuracy(pred,test_new$MSFT.Adjusted)
+
+
+lm.fit = lm(MSFT.Adjusted ~MSFT.Open+MSFT.High+MSFT.Low+sma20+rsi14,data = train_new)
+summary(lm.fit)
+pred_mlr = predict(lm.fit,test_new)
+accuracy(pred_mlr,test_new$MSFT.Adjusted)
+
+library(gam)
+fit_gam <- gam(MSFT.Adjusted ~. , data = train_new)
+summary.gam(fit_gam)
+pred_gam = predict.gam(fit_gam,test_new)
+accuracy(pred_gam,test_new$MSFT.Adjusted)
+
+library(randomForest)
+rf = randomForest(MSFT.Adjusted ~MSFT.Open+MSFT.Close+MSFT.High+MSFT.Low+sma20+rsi14+MSFT.Predict,data = train_new,mytry=5,importance=TRUE)
+pred_rf = predict(rf,test_new)
+accuracy(pred_rf,test_new$MSFT.Adjusted)

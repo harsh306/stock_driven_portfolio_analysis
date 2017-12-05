@@ -2,8 +2,8 @@
 library(quantmod);library(tseries);
 library(timeSeries);library(forecast);library(xts);
 
-start = as.Date("2013-01-01")  
-end = as.Date("2016-01-31")
+start = as.Date("2014-11-28")  
+end = as.Date("2017-11-28")
 
 getSymbols("ANIP",src = "yahoo",from=start,to=end)
 ANIP.df = data.frame(Date = index(ANIP),coredata(ANIP))
@@ -25,7 +25,7 @@ acf.stock = acf(stock[c(1:breakpoint),],main= "ACF PLOT",lag.max = 100,las=1)
 pacf.stock = pacf(stock[c(1:breakpoint),], main='PACF Plot', lag.max=100,las=1)
 
 #Intitializing an xts  object for actual log returns 
-Actual_series = xts(0,as.Date("2016-01-01","%Y-%m-%d"))
+Actual_series = xts(0,as.Date("2017-11-28","%Y-%m-%d"))
 
 # Initialzing a dataframe for the forecasted return series
 forecasted_series = data.frame(Forecasted = numeric())

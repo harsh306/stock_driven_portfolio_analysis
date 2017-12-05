@@ -2,6 +2,10 @@ library(quantmod);library(tseries);
 library(timeSeries);library(forecast);library(xts);
 library(TTR)
 
+saxis.Date(1,at= seq(test_new$Date[1],test_new$Date[361],length.out = 10),format = "%Y-%m",las=2)
+plot(test_new$Date,test_new$BAC.Predict,col="blue",las=1,lwd=2,xaxt = 'n',type="l",pch=22,ylab="Close Prices",xlab="Date",main="Results Using SLR : BAC")
+lines(test_new$Date,pred,col="red",lwd=2,pch=22)
+legend("topleft",legend = c("Actual CP","Predicted CP"),col=c("blue","red"),lty=1:1)
 start = as.Date("2014-11-29")  
 end = as.Date("2017-11-29")
 
@@ -35,30 +39,37 @@ test_new = newData[-(1:361),]
 
 train_data = allData[1:361,]
 test_data = allData[-(1:361),]
-l = lm(train_data$ANIP.Adjusted~train_data$ANIP.Predict)
+l = lm(train_new$ANIP.Adjusted~train_new$ANIP.Predict)
 summary(l)
 
-pred = predict(l,test_data)
-accuracy(pred,test_data$ANIP.Adjusted)
-plot(test_data$Date,test_data$ANIP.Predict,las=1,type="l",pch=22,xlab="DATE",ylab="Close Prices",main="Results Using SLR")
-lines(test_data$Date,pred,col="red",pch=22)
+pred = predict(l,test_new)
+accuracy(pred,test_new$ANIP.Adjusted)
+axis.Date(1,at= seq(test_new$Date[1],test_new$Date[361],length.out = 10),format = "%Y-%m",las=2)
+plot(test_new$Date,test_new$ANIP.Predict,las=1,lwd=2,xaxt = 'n',type="l",pch=22,ylab="Close Prices",xlab="Date",main="Results Using SLR")
+lines(test_new$Date,pred,col="red",lwd=2,pch=22)
+legend("topright",legend = c("Actual CP","Predicted CP"),col=c("black","red"),lty=1:1)
 
 #Now Continue to MLR
 lm.fit = lm(ANIP.Adjusted ~ANIP.Open+ANIP.High+ANIP.Low+sma20+rsi14,data = train_new)
 summary(lm.fit)
 pred_mlr = predict(lm.fit,test_new)
 accuracy(pred_mlr,test_new$ANIP.Adjusted)
-plot(test_data$Date,test_data$ANIP.Adjusted,las=1,type="l",pch=20)
-lines(test_data$Date,pred_mlr,col="red")
+axis.Date(1,at= seq(test_new$Date[1],test_new$Date[361],length.out = 10),format = "%Y-%m",las=2)
+plot(test_new$Date,test_new$ANIP.Predict,las=1,lwd=2,xaxt = 'n',type="l",pch=22,ylab="Close Prices",xlab="Date",main="Results Using MLR : ANIP")
+lines(test_new$Date,pred_mlr,col="red",lwd=2,pch=22)
+legend("topright",legend = c("Actual CP","Predicted CP"),col=c("black","red"),lty=1:1)
 
-#GAM Splines
-fit_spline <- smooth.spline(train_new$ANIP.Predict , train_data$ANIP.Adjusted)
-pred_spline = predict(fit_spline,test_data$ANIP.Adjusted)
 
-accuracy(pred_spline$y,test_data$ANIP.Adjusted)
+#Smooth Splines
+fit_spline <- smooth.spline(train_new$ANIP.Predict , train_new$ANIP.Adjusted,cv = 10)
+pred_spline = predict(fit_spline,test_new$ANIP.Adjusted)
 
-plot(test_data$Date,test_data$ANIP.Adjusted,type="l",pch=22)
-lines(test_new$Date,pred_spline$y,col="red")
+accuracy(pred_spline$y,test_new$ANIP.Adjusted)
+
+axis.Date(1,at= seq(test_new$Date[1],test_new$Date[361],length.out = 10),format = "%Y-%m",las=2)
+plot(test_new$Date,test_new$ANIP.Predict,las=1,lwd=2,xaxt = 'n',type="l",pch=22,ylab="Close Prices",xlab="Date",main="Results Using Splines : ANIP")
+lines(test_new$Date,pred_spline$y,col="red",lwd=2,pch=22)
+legend("topright",legend = c("Actual CP","Predicted CP"),col=c("black","red"),lty=1:1)
 
 
 #Random Forests
@@ -68,6 +79,10 @@ pred_rf = predict(rf,test_new)
 accuracy(pred_rf,test_new$ANIP.Adjusted)
 plot(rf)
 pred_rf[-2]
+axis.Date(1,at= seq(test_new$Date[1],test_new$Date[361],length.out = 10),format = "%Y-%m",las=2)
+plot(test_new$Date,test_new$ANIP.Predict,las=1,lwd=2,xaxt = 'n',type="l",pch=22,ylab="Close Prices",xlab="Date",main="Results Using Random Forests : ANIP")
+lines(test_new$Date,pred_rf,col="red",lwd=2,pch=22)
+legend("topright",legend = c("Actual CP","Predicted CP"),col=c("black","red"),lty=1:1)
 
 # GAM Splines
 library(gam)
@@ -75,3 +90,8 @@ fit_gam <- gam(ANIP.Adjusted ~. , data = train_new)
 summary.gam(fit_gam)
 pred_gam = predict.gam(fit_gam,test_new)
 accuracy(pred_gam,test_new$ANIP.Adjusted)
+axis.Date(1,at= seq(test_new$Date[1],test_new$Date[361],length.out = 10),format = "%Y-%m",las=2)
+plot(test_new$Date,test_new$ANIP.Predict,las=1,lwd=2,xaxt = 'n',type="l",pch=22,ylab="Close Prices",xlab="Date",main="Results Using GAM : ANIP")
+lines(test_new$Date,pred,col="red",lwd=2,pch=22)
+legend("topright",legend = c("Actual CP","Predicted CP"),col=c("black","red"),lty=1:1)
+
