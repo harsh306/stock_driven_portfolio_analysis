@@ -1,0 +1,41 @@
+#RANDOM FOREST 
+library(randomForest)
+library(MASS)
+train <- MSFT.filter1[1:378,2:13]
+test <- MSFT.filter1[-(1:378),"MSFT.predict"]
+train1 <- matrix(1:378, 378,1)
+rf.msft <- randomForest(MSFT.predict~., data =MSFT.filter1, subset=train1, mtry=5,importance= TRUE)  #problem 
+yhat.rf <- predict(rf.msft, newdata=MSFT.filter[-train,])
+mean((yhat.rf-test)^2)
+
+importance(rf.msft)
+varImPlot(rf.msft)
+
+
+# ridge & lasso 
+y <- MSFT.filter1$MSFT.predict
+x <- model.matrix(MSFT.predict~.,MSFT.filter1)[,-1]
+library(glmnet)
+set.seed(1)
+train <- 1:378
+test <- 378:nrow(MSFT.filter1)
+ytest<- y[test]
+
+
+lambda <- 10^seq(10,-2,length=100)
+ 
+   # using cross validation to find the best lambda
+      cv.out <- cv.glmnet(x[train,], y[train], alpha=0)
+      bestlam <-cv.out$lambda.min
+       bestlam 
+      ridge.pred <-predict(ridge.mod, s=bestlam, newx=x[test,] )
+
+  ridge.mod <- glmnet (x[train,],y[train], alpha=0, lambda= lambda)
+  predict(ridge.mod, type="coefficients", s=bestlam)[1:13]
+  mean((ridge.pred-ytest)^2)
+   
+   lasso.mod<-  glmnet (x[train,],y[train], alpha=1, lambda= lambda)
+   lasso.pred <- predict(lasso.mod, s = bestlam, newx = x[test,])
+   mean((lasso.pred-ytest)^2) 
+   lasso.coef <- predict(lasso.mod, type="coefficients", s=bestlam)[1:13]
+   lasso.coef
