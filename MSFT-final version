@@ -1,0 +1,127 @@
+
+library(quantmod);library(tseries);
+library(timeSeries);library(forecast);library(xts);
+library(TTR)
+
+
+
+start = as.Date("2014-11-29")  
+end = as.Date("2017-11-29")
+
+
+
+# Getting the Data Frame for MSFT Stocks
+
+getSymbols("MSFT",src = "yahoo",from=start,to=end)
+
+MSFT.df = data.frame(Date = index(MSFT),coredata(MSFT))
+
+
+
+#Getting new features using TTR Library
+
+sma20 = SMA(MSFT.df[c("MSFT.Adjusted")],n = 20)
+ema14 = EMA(MSFT.df[c("MSFT.Adjusted")],n=14)
+bb20 = BBands(MSFT.df[c("MSFT.Adjusted")],sd = 2.0)
+dataWithBB = data.frame(MSFT.df,bb20)
+
+#Parameter RSI
+
+rsi14 = RSI(MSFT.df[c("MSFT.Adjusted")],n=14)
+allData = data.frame(MSFT.df,sma20,ema14,bb20,rsi14)
+allData = na.omit(allData)
+a <- allData[2:length(allData$MSFT.Adjusted),]$MSFT.Adjusted
+allData['MSFT.Predict'] <- c(a,allData[length(allData$MSFT.Adjusted),7])
+attach(allData)
+
+#newData 
+
+b = data.frame(allData[1,c(-1,-7,-15)])
+c = allData[1:735,c(-1,-7,-15)]
+bb =rbind(b,c)
+newData = data.frame(allData[,c(1,7,15)],bb)
+train_new = newData[1:368,]
+test_new = newData[-(1:368),]
+
+train_data = allData[1:368,]
+test_data = allData[-(1:368),]
+
+#SLR
+l <- lm(train_new$MSFT.Adjusted~train_new$MSFT.Predict, data = train_new)
+summary(l)
+pred = predict(l,test_new)
+accuracy(pred,test_new$MSFT.Adjusted)
+plot(test_new$Date,test_new$MSFT.Predict,col="blue",las=1,lwd=2,xaxt = 'n',type="l",pch=22,ylab="Close Prices",xlab="Date",main="Results Using SLR : MSFT")
+axis.Date(1,at= seq(test_new$Date[1],test_new$Date[361],length.out = 10),format = "%Y-%m",las=2)
+lines(test_new$Date,pred,col="red",lwd=2,pch=22)
+legend("topleft",legend = c("Actual CP","Predicted CP"),col=c("blue","red"),lty=1:1)
+
+
+# MLR
+lm.fit = lm(MSFT.Adjusted ~.,data = train_new)
+summary(lm.fit)
+pred_mlr = predict(lm.fit,test_new)
+accuracy(pred_mlr,test_new$MSFT.Adjusted)
+plot(test_new$Date,test_new$MSFT.Adjusted,col="blue",las=1,lwd=2,xaxt = 'n',type="l",pch=22,ylab="Close Prices",xlab="Date",main="Results Using MLR : MSFT")
+axis.Date(1,at= seq(test_new$Date[1],test_new$Date[361],length.out = 10),format = "%Y-%m",las=2)
+lines(test_new$Date,pred_mlr,col="red",lwd=2,pch=22)
+legend("topleft",legend = c("Actual CP","Predicted CP"),col=c("blue","red"),lty=1:1)
+
+
+
+#Random Forests
+library(randomForest)
+trainn = train_new[,c(-1)]
+rf = randomForest(MSFT.Adjusted~MSFT.Open+MSFT.High+MSFT.Close+MSFT.Low+MSFT.Volume, data = trainn, mytry=5,importance=TRUE)
+pred_rf = predict(rf,test_new)
+accuracy(pred_rf,test_new$MSFT.Adjusted)
+plot(rf)
+importance(rf)
+plot(test_new$Date,test_new$MSFT.Adjusted,col="blue",las=1,lwd=2,xaxt = 'n',type="l",pch=22,ylab="Close Prices",xlab="Date",main="Results Using Random Forests : MSFT")
+axis.Date(1,at= seq(test_new$Date[1],test_new$Date[361],length.out = 10),format = "%Y-%m",las=2)
+lines(test_new$Date,pred_rf,col="red",lwd=2,pch=22)
+legend("topleft",legend = c("Actual CP","Predicted CP"),col=c("blue","red"),lty=1:1)
+
+
+
+
+# Splines
+fit_spline <- smooth.spline(train_new$MSFT.Predict , train_data$MSFT.Adjusted)
+pred_spline = predict(fit_spline,test_new$MSFT.Adjusted)
+accuracy(pred_spline$y,test_new$MSFT.Adjusted)
+plot(test_new$Date,test_new$MSFT.Adjusted,col="blue",las=1,lwd=2,xaxt = 'n',type="l",pch=22,ylab="Close Prices",xlab="Date",main="Results Using Splines : MSFT")
+axis.Date(1,at= seq(test_new$Date[1],test_new$Date[361],length.out = 10),format = "%Y-%m",las=2)
+lines(test_new$Date,pred_spline$y,col="red",lwd=2,pch=22)
+legend("topleft",legend = c("Actual CP","Predicted CP"),col=c("blue","red"),lty=1:1)
+
+
+
+
+
+#GAM spline mlr
+library(gam)
+fit_gam <- gam(train_new$MSFT.Adjusted ~MSFT.Predict+MSFT.Close , data = train_new)
+summary.gam(fit_gam)
+preds = predict(fit_gam, newdata=test_new)
+accuracy(preds, test_new$MSFT.Adjusted)
+plot(test_new$Date,test_new$MSFT.Adjusted,col="blue",las=1,lwd=2,xaxt = 'n',type="l",pch=22,ylab="Close Prices",xlab="Date",main="Results Using Splines : MSFT")
+axis.Date(1,at= seq(test_new$Date[1],test_new$Date[361],length.out = 10),format = "%Y-%m",las=2)
+lines(test_new$Date,preds,col="red",lwd=2,pch=22)
+legend("topleft",legend = c("Actual CP","Predicted CP"),col=c("blue","red"),lty=1:1)
+
+
+
+
+
+#PCA
+pca_fit= prcomp(train_data[2:12])
+par(mfrow=c(1,1))
+plot(pca_fit$x[, 1:2], col= 1:2,xlab = "Z1", ylab = "Z2",  pch=20,las=1)
+fit_pcalm = lm(train_new$MSFT.Adjusted~pca_fit$x[,1:2],data = as.data.frame(pca_fit$x))
+summary.lm(fit_pcalm)
+pred_pcr = predict(fit_pcalm,test_data)
+accuracy(pred_pcr,test_new$MSFT.Adjusted)
+plot(test_new$Date,test_new$MSFT.Adjusted,col="blue",las=1,lwd=2,xaxt = 'n',type="l",pch=22,ylab="Close Prices",xlab="Date",main="Results Using PCA : MSFT")
+axis.Date(1,at= seq(test_new$Date[1],test_new$Date[361],length.out = 10),format = "%Y-%m",las=2)
+lines(test_new$Date,pred_pcr,col="red",lwd=2,pch=22)
+legend("topleft",legend = c("Actual CP","Predicted CP"),col=c("blue","red"),lty=1:1)
